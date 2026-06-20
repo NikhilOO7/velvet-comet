@@ -1,0 +1,21 @@
+{
+  "name": "@velvet-comet/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@velvet-comet/contracts": "workspace:*",
+    "@velvet-comet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.5"
+  }
+}

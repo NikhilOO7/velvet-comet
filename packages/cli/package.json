@@ -1,0 +1,21 @@
+{
+  "name": "@velvet-comet/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "vc": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "research": "tsx src/index.ts research"
+  },
+  "dependencies": {
+    "@velvet-comet/adapters": "workspace:*",
+    "@velvet-comet/contracts": "workspace:*",
+    "@velvet-comet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

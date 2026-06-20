@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: #08080d;
+  color: #e8e8f4;
+}
+
+/* Subtle starfield glow behind the canvas — the "comet" ambiance. */
+body {
+  background-image:
+    radial-gradient(900px 500px at 85% -10%, #22d3ee14, transparent),
+    radial-gradient(700px 500px at 10% 110%, #d946ef10, transparent);
+  background-attachment: fixed;
+}
+
+*:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: #22d3ee33;
+}
+
+/* Thin, quiet scrollbars suited to a dark operator console. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a3c;
+  border-radius: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}

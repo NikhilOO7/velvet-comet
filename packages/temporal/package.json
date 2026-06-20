@@ -1,0 +1,24 @@
+{
+  "name": "@velvet-comet/temporal",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "worker": "tsx src/worker.ts",
+    "start": "tsx src/client.ts"
+  },
+  "dependencies": {
+    "@temporalio/activity": "^1.11.0",
+    "@temporalio/client": "^1.11.0",
+    "@temporalio/worker": "^1.11.0",
+    "@temporalio/workflow": "^1.11.0",
+    "@velvet-comet/adapters": "workspace:*",
+    "@velvet-comet/contracts": "workspace:*",
+    "@velvet-comet/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
