@@ -3,7 +3,7 @@
 **Completeness-first research on Firecrawl.** Coverage you can trust — not just more results.
 
 > Built for the Firecrawl product-engineer brief ([docs/BRIEF.md](docs/BRIEF.md)).
-> The design rationale lives in [PLAN.md](PLAN.md); the required write-up is [ONE-PAGER.md](ONE-PAGER.md).
+> Full project walkthrough: [OVERVIEW.md](OVERVIEW.md). Design rationale: [PLAN.md](PLAN.md). The brief's required write-up: [ONE-PAGER.md](ONE-PAGER.md).
 
 ---
 
@@ -94,6 +94,7 @@ Highlights worth a look: a **crash/resume test** proving a round is never re-spe
 
 ## More
 
+- **[OVERVIEW.md](OVERVIEW.md)** — the full project walkthrough (problem → engine → architecture → how to run).
 - **[PLAN.md](PLAN.md)** — the decision, architecture, standards, design patterns, frontend system.
 - **[ONE-PAGER.md](ONE-PAGER.md)** — what I built, what I deliberately didn't, and what AI got wrong.
 - **[docs/DEV.md](docs/DEV.md)** — developer guide / run commands.
