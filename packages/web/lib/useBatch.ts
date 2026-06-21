@@ -7,7 +7,7 @@
  */
 import { useCallback, useRef, useState } from 'react';
 import type { ResearchOutcome } from '@velvet-comet/contracts';
-import { submitResearch, streamUrl, type ProgressFrame, type SubmitInput } from './api';
+import { submitResearch, streamUrl, getJob, type ProgressFrame, type SubmitInput } from './api';
 
 export type JobPhase = 'submitting' | 'streaming' | 'done' | 'error';
 
@@ -49,22 +49,41 @@ export function useBatch(): {
           if (res.outcome) return patch(localId, { phase: 'done', outcome: res.outcome });
           if (!res.id) return patch(localId, { phase: 'error', error: 'Malformed submit response' });
 
-          const es = new EventSource(streamUrl(res.id));
+          const jobId = res.id;
+          let settled = false;
+          const finish = (next: Partial<BatchJob>): void => {
+            settled = true;
+            patch(localId, next);
+          };
+
+          const es = new EventSource(streamUrl(jobId));
           sources.current.push(es);
           patch(localId, { phase: 'streaming' });
           es.onmessage = (ev: MessageEvent<string>): void => {
             const frame = JSON.parse(ev.data) as ProgressFrame;
             if (TERMINAL.has(frame.status)) {
               es.close();
-              if (frame.outcome) patch(localId, { phase: 'done', frame, outcome: frame.outcome });
-              else patch(localId, { phase: 'error', error: frame.error?.message ?? 'Job failed' });
+              if (frame.outcome) finish({ phase: 'done', frame, outcome: frame.outcome });
+              else finish({ phase: 'error', error: frame.error?.message ?? 'Job failed' });
             } else {
               patch(localId, { phase: 'streaming', frame });
             }
           };
+          // A stream can close right after a fast job finishes (or hiccup). Don't
+          // call that an error — confirm the real state via a direct fetch first.
           es.onerror = (): void => {
             es.close();
-            patch(localId, { phase: 'error', error: 'Stream interrupted' });
+            if (settled) return;
+            void getJob(jobId).then((view) => {
+              if (settled) return;
+              if (view?.outcome && (view.status === 'done' || view.status === 'partial')) {
+                finish({ phase: 'done', outcome: view.outcome });
+              } else if (view?.status === 'failed') {
+                finish({ phase: 'error', error: view.error?.message ?? 'Job failed' });
+              } else {
+                finish({ phase: 'error', error: 'Stream interrupted' });
+              }
+            });
           };
           return undefined;
         })

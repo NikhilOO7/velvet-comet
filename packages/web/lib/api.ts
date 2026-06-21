@@ -48,3 +48,20 @@ export async function submitResearch(input: SubmitInput): Promise<SubmitResponse
 export function streamUrl(jobId: string): string {
   return `${API_BASE}/v1/research/${jobId}/stream`;
 }
+
+export interface JobView {
+  status: string;
+  outcome?: ResearchOutcome;
+  error?: { code: string; message: string };
+}
+
+/** Direct fetch of a job's current state — the polling backstop for SSE. */
+export async function getJob(jobId: string): Promise<JobView | null> {
+  try {
+    const res = await fetch(`${API_BASE}/v1/research/${jobId}`);
+    if (!res.ok) return null;
+    return (await res.json()) as JobView;
+  } catch {
+    return null;
+  }
+}

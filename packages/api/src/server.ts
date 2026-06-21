@@ -84,10 +84,16 @@ export function buildServer(container: Container): Server {
 
     reply.hijack();
     const raw = reply.raw;
+    // hijack() bypasses the CORS plugin, so set the header manually — the
+    // browser's cross-origin EventSource is blocked without it.
+    const origin = (request.headers.origin as string | undefined) ?? '*';
     raw.writeHead(200, {
       'content-type': 'text/event-stream',
       'cache-control': 'no-cache',
       connection: 'keep-alive',
+      'access-control-allow-origin': origin,
+      'access-control-allow-credentials': 'true',
+      'x-accel-buffering': 'no',
     });
     const send = (rec: Parameters<typeof toProgressFrame>[0]): void => {
       raw.write(`data: ${JSON.stringify(toProgressFrame(rec))}\n\n`);
