@@ -1,6 +1,6 @@
 # Velvet Comet — Build Plan
 
-*Acting as staff engineer / product engineer on the Firecrawl take-home brief. Grounded in Firecrawl's current v2 (mid-2026) capabilities so we don't rebuild something that already ships.*
+Design rationale, architecture decisions, and the roadmap for Velvet Comet.
 
 ---
 
@@ -31,7 +31,7 @@ All 11 feedback items scored against four axes: **business weight** (ARR + renew
 - **Highest stakes, soonest clock.** $180k enterprise, *renewal this quarter*, explicit expansion to two more teams gated on this. Single largest at-risk + expand number in the dataset, and "search relevance / result count" is 38 tickets — so #1 isn't a snowflake.
 - **It's a real product gap, not a trap.** Firecrawl deprecated `/deep-research` (Jun 30 2025) and told users to "orchestrate `/search` + `/scrape` yourself." Customer #1 *noticed the deprecation*. We rebuild that capability as a productized, batch-native surface — exactly the void.
 - **It plays to scalable / reliable system design.** "A few thousand queries a night, runs overnight, make it 10× slower I don't care, nobody watches a spinner." That is a *batch orchestration / throughput / reliability* problem, not a latency problem — the most interesting infra story in the eleven.
-- **It composes multiple Firecrawl capabilities** — `/search` (the fan-out) plus `/scrape` (the deepen step, `request.deepen`) — and forces handling of every messy part the brief names: retries, slow pages, empty results, dedup. (`/map`+`/crawl` for authority-hub discovery and `changeTracking` for monitoring are designed in §3/§15 but not yet built.)
+- **It composes multiple Firecrawl capabilities** — `/search` (the fan-out) plus `/scrape` (the deepen step, `request.deepen`) — and forces handling of every messy part that matters: retries, slow pages, empty results, dedup. (`/map`+`/crawl` for authority-hub discovery and `changeTracking` for monitoring are designed in §3/§15 but not yet built.)
 
 **The core insight driving the whole design** (from the #1 call): *"going from ten to fifty gave us forty more of the same SEO winners. The sources we miss don't show up at any limit."*
 
@@ -150,7 +150,7 @@ Steps ① and ④ are what find the trade pubs and niche forums that *don't appe
 
 **Why this shape:** the workload is embarrassingly parallel, bursty (thousands of queries dumped at 2am), and bottlenecked entirely on **Firecrawl's per-plan rate limits and concurrency**, not on our CPU. So the design centers on a **queue + stateless workers + a single chokepoint Firecrawl client that owns the rate / concurrency budget**. Two refinements over a naive pipeline, both decided *before* writing code because they change topology:
 
-1. **A coordinator, not a fixed DAG.** The completeness engine is a *durable loop with data-dependent fan-out* — step ④ decides at runtime whether to spawn round N+1, and step ② can discover authority hubs that trigger new crawls. A coordinator owns those decisions against durable Postgres state instead of hard-wiring a linear pipeline. Hand-rolled for the 72h demo, but its state machine is designed to port to **Temporal / Inngest** later (see §5).
+1. **A coordinator, not a fixed DAG.** The completeness engine is a *durable loop with data-dependent fan-out* — step ④ decides at runtime whether to spawn round N+1, and step ② can discover authority hubs that trigger new crawls. A coordinator owns those decisions against durable Postgres state instead of hard-wiring a linear pipeline. Hand-rolled for the initial build, but its state machine is designed to port to **Temporal / Inngest** later (see §5).
 2. **Hot and cold are split lanes, not one queue.** Two workloads with opposite SLAs share one engine but not one budget (see §4a).
 
 ### 4a. Hot vs. cold paths
@@ -180,8 +180,8 @@ Same engine code, two config profiles (`coverage=high|fast`, round caps, deadlin
 | **Cache / state** | **Redis** | Rate token-buckets, content-hash dedup sets, idempotency keys, queue |
 | **LLM** | **Claude (Opus 4.8 for expansion / intent reasoning, Haiku 4.5 for cheap classification)** | Query expansion, intent scoring, comparison-page detection; tiered for cost |
 | **Console** | **Next.js + React + Tailwind**, SSE / WebSocket for live job streaming | Fast to build, good live-demo surface |
-| **Infra** | **Docker Compose** for the 72h demo; **Fly.io / Render** target; Terraform sketch for prod | Reproducible local demo; clear prod path without over-building |
-| **Observability** | **OpenTelemetry traces + Prometheus metrics + structured logs**; a **cost meter** counting Firecrawl credits per job | The brief rewards handling the messy parts visibly; for a batch product, *cost per query* is a first-class metric |
+| **Infra** | **Docker Compose** for the initial build; **Fly.io / Render** target; Terraform sketch for prod | Reproducible local demo; clear prod path without over-building |
+| **Observability** | **OpenTelemetry traces + Prometheus metrics + structured logs**; a **cost meter** counting Firecrawl credits per job | Handling the messy parts has to be visible; for a batch product, *cost per query* is a first-class metric |
 
 ### 5a. Agentic posture & MCP
 
@@ -233,7 +233,7 @@ firecrawl_call(id, job_id, endpoint, status, latency_ms, credits, retries)
 
 ---
 
-## 8. 72-hour demo scope vs. production
+## 8. Demo scope vs. production
 
 **Build now (demo):** the engine (①–⑤), the async Research API with webhook batch path, the Batch Console with live coverage view, the CLI, the rate-limited / retrying / idempotent Firecrawl client, a real nightly batch run of ~a few hundred queries with a coverage report. One language, demoable live in 45 min.
 
@@ -253,7 +253,7 @@ The research pass surfaced a real one already — a source claimed Firecrawl's `
 
 ---
 
-## 10. Milestones (72h)
+## 10. Milestones
 
 1. **H0–8** Firecrawl client chokepoint (Redis Lua rate-limiter + leased semaphore + retry + cache + cost meter) + contract tests; query-expansion leaf stage.
 2. **H8–24** Coordinator/saturation controller (Postgres state machine) + fan-out + diversity-merge with atomic dedup/saturation sets + round barriers; coverage report. Engine works end-to-end on CLI.
@@ -262,7 +262,7 @@ The research pass surfaced a real one already — a source claimed Firecrawl's `
 5. **H56–68** Real nightly batch run, harden retries / empties / slow-tails / poison-DLQ, polish demo.
 6. **H68–72** One-pager + record fallback demo.
 
-> Production-only (named, not built in 72h): port the coordinator to Temporal/Inngest, PgBouncer, per-tenant fair-share queuing, worker autoscaling policy.
+> Production-only (named, not built initially): port the coordinator to Temporal/Inngest, PgBouncer, per-tenant fair-share queuing, worker autoscaling policy.
 
 ---
 
@@ -370,7 +370,7 @@ The console is the live-demo surface, so it has to be genuinely beautiful and *l
 
 ## 15. Post-MVP improvement roadmap
 
-The 72h slice is complete and durable. The next investments, prioritized by
+The initial slice is complete and durable. The next investments, prioritized by
 leverage. The honest gap: the product *asserts* completeness but does not yet
 *measure* it — so the eval harness comes first and gates everything after it.
 
@@ -416,7 +416,7 @@ leverage. The honest gap: the product *asserts* completeness but does not yet
 
 ---
 
-## Appendix — Firecrawl capability notes (verified, mid-2026 v2)
+## Appendix — Firecrawl v2 capability notes (verified)
 
 - **`/search`**: `limit` (default 10, max 100, per source). `sources: [web, news, images]`. No `scrapeOptions` ⇒ SERP-only snippets (~sub-second). `categories: [github, research, pdf]`. **No rerank / intent param.**
 - **`/scrape` proxy**: `basic` | `enhanced` | `auto` (default; basic→enhanced fallback). **No BYO proxy on hosted API** (self-host env vars only).

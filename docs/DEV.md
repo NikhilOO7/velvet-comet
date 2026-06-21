@@ -24,7 +24,10 @@ packages/
   temporal/    The Coordinator as a Temporal workflow + activities. Durability is
                free (event-sourced); the saturation loop is plain code.
   eval/        Completeness eval harness: golden topics + recall@N vs. a flat
-               /search baseline. `pnpm --filter eval eval` prints the lift.
+               /search baseline. `pnpm --filter eval eval` prints the +67% lift.
+               `eval:live` (needs a key) corroborates on real Firecrawl queries
+               with distinct-domain coverage + the saturation curve (no ground
+               truth needed — recall is unknowable on the open web).
   cli/         `vc research` — composition root + terminal renderer.
 ```
 

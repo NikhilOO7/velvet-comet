@@ -6,7 +6,8 @@
   "main": "./src/index.ts",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "eval": "tsx src/run.ts"
+    "eval": "tsx src/run.ts",
+    "eval:live": "tsx src/live.ts"
   },
   "dependencies": {
     "@velvet-comet/adapters": "workspace:*",
