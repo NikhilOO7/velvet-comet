@@ -10,9 +10,19 @@ const PORT = Number(process.env.PORT ?? 3000);
 async function buildStore(): Promise<JobStore | undefined> {
   const url = process.env.DATABASE_URL;
   if (!url) return undefined;
-  const pool = new pg.Pool({ connectionString: url });
-  await ensureSchema(pool);
-  return new PostgresJobStore(pool);
+  // Postgres is the durable store, but it's optional. If it's unreachable
+  // (e.g. not running locally), fall back to in-memory rather than crashing —
+  // durability degrades gracefully instead of taking the whole API down.
+  try {
+    const pool = new pg.Pool({ connectionString: url });
+    await ensureSchema(pool);
+    return new PostgresJobStore(pool);
+  } catch (e) {
+    process.stderr.write(
+      `Postgres unavailable (${String(e)}); falling back to in-memory store.\n`,
+    );
+    return undefined;
+  }
 }
 
 async function main(): Promise<void> {

@@ -9,7 +9,8 @@ export type EngineErrorCode =
   | 'UPSTREAM_UNAVAILABLE' // 5xx — retryable
   | 'UPSTREAM_REJECTED' // 4xx (bad request, blocked domain) — NOT retryable
   | 'EMPTY_RESULT' // valid call, zero results — drives escalation/gap
-  | 'BUDGET_EXHAUSTED' // credit ceiling hit — NOT retryable
+  | 'BUDGET_EXHAUSTED' // our own per-job credit ceiling hit — NOT retryable
+  | 'CREDITS_EXHAUSTED' // Firecrawl account out of credits (402) — NOT retryable, stop early
   | 'EXPANSION_FAILED' // LLM leaf stage failed
   | 'INVALID_INPUT' // failed schema/parse at a boundary
   | 'INTERNAL'; // unexpected — investigate

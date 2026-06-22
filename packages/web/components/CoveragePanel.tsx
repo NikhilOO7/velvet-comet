@@ -8,6 +8,7 @@ const STOP_LABEL: Record<string, string> = {
   saturated: 'saturated (dry)',
   max_rounds: 'round cap',
   credit_budget: 'budget cap',
+  credits_exhausted: 'out of credits',
   error: 'error',
 };
 

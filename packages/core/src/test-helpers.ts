@@ -81,6 +81,23 @@ export class FailingSearch implements SearchPort {
   }
 }
 
+/** Returns results for the first `okCalls`, then runs out of Firecrawl credits. */
+export class CreditExhaustingSearch implements SearchPort {
+  calls = 0;
+  constructor(private readonly okCalls: number) {}
+  search(input: {
+    query: string;
+    limit: number;
+    round: number;
+  }): Promise<Result<readonly SearchResultItem[], EngineError>> {
+    this.calls++;
+    if (this.calls > this.okCalls) {
+      return Promise.resolve(err(engineError('CREDITS_EXHAUSTED', 'firecrawl credits exhausted (402)')));
+    }
+    return Promise.resolve(ok([makeItem({ url: `https://r${input.round}-c${this.calls}.example.com/a` })]));
+  }
+}
+
 /** Scrape fake: returns deterministic markdown per URL. Counts calls. */
 export class FakeScrape implements ScrapePort {
   calls = 0;

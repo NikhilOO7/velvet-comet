@@ -208,6 +208,7 @@ function restamp(items: readonly SearchResultItem[], round: number): SearchResul
 }
 
 function mapHttpError(status: number): EngineError {
+  if (status === 402) return engineError('CREDITS_EXHAUSTED', 'firecrawl credits exhausted (402)');
   if (status === 429) return engineError('RATE_LIMITED', 'firecrawl rate limited (429)');
   if (status === 408) return engineError('UPSTREAM_TIMEOUT', 'firecrawl timeout (408)');
   if (status >= 500) return engineError('UPSTREAM_UNAVAILABLE', `firecrawl ${status}`);

@@ -29,7 +29,12 @@ import {
   ALL_SOURCE_CLASSES,
 } from './coverage.js';
 
-export type StoppedReason = 'saturated' | 'max_rounds' | 'credit_budget' | 'error';
+export type StoppedReason =
+  | 'saturated'
+  | 'max_rounds'
+  | 'credit_budget'
+  | 'credits_exhausted'
+  | 'error';
 
 /** Serializable snapshot of an in-flight research run — the checkpoint unit. */
 export interface EngineState {
@@ -147,6 +152,7 @@ export async function executeRound(
   const roundItems: SearchResultItem[] = [];
   let creditsSpent = state.creditsSpent;
   let budgetHit = false;
+  let creditsExhausted = false;
 
   for (const subQuery of expansion.value) {
     if (
@@ -164,6 +170,13 @@ export async function executeRound(
     creditsSpent += ESTIMATED_CREDITS_PER_SEARCH;
 
     if (isErr(searchResult)) {
+      // Out of Firecrawl credits: stop early — every remaining call would fail
+      // too. Keep everything gathered so far and finalize as partial.
+      if (searchResult.error.code === 'CREDITS_EXHAUSTED') {
+        gaps.push({ sourceClass: 'other', reason: 'Firecrawl credits exhausted — returning partial results' });
+        creditsExhausted = true;
+        break;
+      }
       gaps.push({ sourceClass: subQuery.targetClass, reason: `${searchResult.error.code}: ${searchResult.error.message}` });
       continue;
     }
@@ -192,7 +205,7 @@ export async function executeRound(
     saturationCurve: [...state.saturationCurve, point],
     gaps,
     creditsSpent,
-    stoppedReason: budgetHit ? 'credit_budget' : null,
+    stoppedReason: creditsExhausted ? 'credits_exhausted' : budgetHit ? 'credit_budget' : null,
     fatalError: null,
   };
 }

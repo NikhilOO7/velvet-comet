@@ -51,7 +51,13 @@ export default function Console(): React.JSX.Element {
               <div className="space-y-6">
                 {selected?.outcome ? (
                   <div className="animate-fade-up space-y-6">
-                    {selected.outcome.status === 'partial' ? (
+                    {selected.outcome.coverage.stoppedReason === 'credits_exhausted' ? (
+                      <div className="rounded-xl border border-danger/40 bg-danger/10 px-4 py-3 text-sm text-danger">
+                        <strong>Firecrawl credits ran out.</strong> Stopped early and kept the{' '}
+                        {selected.outcome.coverage.domainsSeen} sources gathered before that, no data lost.
+                        Top up your key to go further.
+                      </div>
+                    ) : selected.outcome.status === 'partial' ? (
                       <div className="rounded-xl border border-warn/30 bg-warn/5 px-4 py-3 text-sm text-warn">
                         Partial success — completed with gaps it couldn&apos;t fill. Shown below, honestly.
                       </div>

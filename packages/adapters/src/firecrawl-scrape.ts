@@ -101,6 +101,7 @@ export class FirecrawlScrape implements ScrapePort {
 }
 
 function mapHttpError(status: number): EngineError {
+  if (status === 402) return engineError('CREDITS_EXHAUSTED', 'firecrawl credits exhausted (402)');
   if (status === 429) return engineError('RATE_LIMITED', 'firecrawl rate limited (429)');
   if (status === 408) return engineError('UPSTREAM_TIMEOUT', 'firecrawl scrape timeout (408)');
   if (status >= 500) return engineError('UPSTREAM_UNAVAILABLE', `firecrawl ${status}`);

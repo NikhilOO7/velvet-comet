@@ -115,7 +115,7 @@ export const CoverageReport = z.object({
   creditsSpent: z.number().min(0),
   /** True when the loop reached saturation rather than hitting a cap/budget. */
   saturated: z.boolean(),
-  stoppedReason: z.enum(['saturated', 'max_rounds', 'credit_budget', 'error']),
+  stoppedReason: z.enum(['saturated', 'max_rounds', 'credit_budget', 'credits_exhausted', 'error']),
 });
 export type CoverageReport = z.infer<typeof CoverageReport>;
 

@@ -5,7 +5,7 @@ import { Panel, SourceBadge } from './ui';
 export function ResultsList({ results }: { results: readonly RankedResult[] }): React.JSX.Element {
   return (
     <Panel title={`Ranked results · ${results.length}`}>
-      <ol className="space-y-1">
+      <ol className="max-h-[28rem] space-y-1 overflow-y-auto pr-1">
         {results.map((r) => (
           <li
             key={r.url}
